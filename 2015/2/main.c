@@ -12,8 +12,7 @@ int surface_area(int l, int w, int h) {
 int main() {
   int l, w, h;
   int total = 0;
-  // TODO: hanging because I don't understand how scanf works apparently
-  while (scanf("%i%*[x]%i%*[x]%i", &l, &w, &h)) {
+  while ((scanf("%i%*[x]%i%*[x]%i", &l, &w, &h)) == 3) {
     total = total + surface_area(l, w, h);
   }
   printf("%i", total);
