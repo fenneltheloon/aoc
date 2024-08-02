@@ -1,24 +1,20 @@
 from sys import stdin
 
 total = 0
-vowels = ['a', 'e', 'i', 'o', 'u']
-forbid = ["ab", "cd", "pq", "xy"]
 
 for line in stdin:
-    vc = 0
-    dl = False
-    ct = True
-    prev = ''
-    for char in line:
-        if char in vowels:
-            vc += 1
-        if char == prev:
-            dl = True
-        if prev + char in forbid:
-            ct = False
-            break
-        prev = char
-    if (vc > 2) and dl and ct:
+    length = len(line)-1
+    d = False
+    s = False
+    for i in range(length-2):
+        s1 = line[:i]
+        s2 = line[i:i+2]
+        s3 = line[i+2:]
+        if s2 in s1 or s2 in s3:
+            d = True
+        if line[i] == line[i+2]:
+            s = True
+    if d and s:
         total += 1
 
 print(total)
