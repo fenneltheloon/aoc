@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,10 +12,10 @@ int main() {
   char *line = malloc(line_size * sizeof(char));
 
   // Initialize grid
-  bool grid[1000][1000];
+  unsigned int grid[1000][1000];
   for (short i = 0; i < 1000; i++) {
     for (short j = 0; j < 1000; j++) {
-      grid[i][j] = false;
+      grid[i][j] = 0;
     }
   }
 
@@ -51,21 +50,23 @@ int main() {
     case On:
       for (short i = x1; i <= x2; i++) {
         for (short j = y1; j <= y2; j++) {
-          grid[i][j] = true;
+          grid[i][j]++;
         }
       }
       break;
     case Off:
       for (short i = x1; i <= x2; i++) {
         for (short j = y1; j <= y2; j++) {
-          grid[i][j] = false;
+          if (grid[i][j] > 0) {
+            grid[i][j]--;
+          }
         }
       }
       break;
     case Toggle:
       for (short i = x1; i <= x2; i++) {
         for (short j = y1; j <= y2; j++) {
-          grid[i][j] = !grid[i][j];
+          grid[i][j] = grid[i][j] + 2;
         }
       }
       break;
@@ -75,9 +76,7 @@ int main() {
   int total = 0;
   for (short i = 0; i < 1000; i++) {
     for (short j = 0; j < 1000; j++) {
-      if (grid[i][j]) {
-        total++;
-      }
+      total = total + grid[i][j];
     }
   }
 
