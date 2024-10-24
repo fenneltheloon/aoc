@@ -1,112 +1,163 @@
-use core::panic;
+use std::collections::HashMap;
+use std::collections::VecDeque;
 use std::io;
 
-#[derive(Debug)]
-struct Wire {
-    name: String,
-    value: u16,
+enum Operation {
+    Direct,
+    Not,
+    And,
+    Or,
+    Lshift,
+    Rshift,
 }
 
-fn is_num(s: &str) -> bool {
-    let c = s.chars();
-    for ch in c {
-        if !ch.is_ascii_digit() {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn is_wire(s: &str) -> bool {
-    let c = s.chars();
-    for ch in c {
-        if !ch.is_ascii_lowercase() {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn wire_get(s: &str, d: &Vec<Wire>) -> Option<u16> {
-    for r in d {
-        if r.name == s {
-            return Some(r.value);
-        }
-    }
-    return None;
-}
-
-fn wire_set(s: &str, d: &mut Vec<Wire>, n: u16) {
-    for w in &mut *d {
-        if w.name == s {
-            w.value = n;
-            return;
-        }
-    }
-    d.push(Wire {
-        name: s.to_string(),
-        value: n,
-    });
-}
-
-fn evaluate(t: &[&str], w: &mut Vec<Wire>) -> u16 {
-    if t.len() == 1 {
-        if is_num(t[0]) {
-            return t[0].parse::<u16>().unwrap();
-        }
-        if is_wire(t[0]) {
-            match wire_get(t[0], w) {
-                Some(n) => return n,
-                None => {
-                    w.push(Wire {
-                        name: t[0].to_string(),
-                        value: 0,
-                    });
-                    return 0;
-                }
-            }
-        }
-        panic!("Unexpected token found. Exiting...");
-    }
-    if let Some(i) = t.iter().position(|n| n == &"->") {
-        let e = evaluate(&t[..i], w);
-        wire_set(t[i + 1], w, e);
-        return e;
-    }
-    if let Some(i) = t.iter().position(|n| n == &"AND") {
-        let lh = evaluate(&t[..i], w);
-        let rh = evaluate(&t[i + 1..], w);
-        return lh & rh;
-    }
-    if let Some(i) = t.iter().position(|n| n == &"OR") {
-        let lh = evaluate(&t[..i], w);
-        let rh = evaluate(&t[i + 1..], w);
-        return lh | rh;
-    }
-    if let Some(i) = t.iter().position(|n| n == &"LSHIFT") {
-        let lh = evaluate(&t[..i], w);
-        let rh = evaluate(&t[i + 1..], w);
-        return lh << rh;
-    }
-    if let Some(i) = t.iter().position(|n| n == &"RSHIFT") {
-        let lh = evaluate(&t[..i], w);
-        let rh = evaluate(&t[i + 1..], w);
-        return lh >> rh;
-    }
-    if let Some(i) = t.iter().position(|n| n == &"NOT") {
-        let e = evaluate(&t[i + 1..], w);
-        return !e;
-    }
-    panic!("Expression does not parse correctly. Exiting...");
+struct Assignment {
+    op: Operation,
+    in1: String,
+    in2: Option<String>,
+    out: String,
 }
 
 fn main() {
-    let mut wires: Vec<Wire> = Vec::new();
+    let mut wires: HashMap<String, u16> = HashMap::with_capacity(339);
+    // Pop front, push back
+    let mut assignments: VecDeque<Assignment> = VecDeque::with_capacity(339);
+
     for line in io::stdin().lines() {
         let line = line.unwrap();
-        let tokens_str: Vec<&str> = line.split(" ").collect();
-        let _ = evaluate(&tokens_str, &mut wires);
+        let line: Vec<&str> = line.split(" ").collect();
+
+        // 0 -> a
+        // a -> b
+        if line.len() == 3 {
+            assignments.push_back(Assignment {
+                op: Operation::Direct,
+                in1: line[0].to_string(),
+                in2: None,
+                out: line[2].to_string(),
+            })
+        // NOT a -> b
+        } else if line.len() == 4 {
+            assignments.push_back(Assignment {
+                op: Operation::Not,
+                in1: line[1].to_string(),
+                in2: None,
+                out: line[3].to_string(),
+            })
+        // a AND b -> c
+        // a OR b -> c
+        // a LSHIFT b -> c
+        // a RSHIFT b -> c
+        } else {
+            match line[1] {
+                "AND" => assignments.push_back(Assignment {
+                    op: Operation::And,
+                    in1: line[0].to_string(),
+                    in2: Some(line[2].to_string()),
+                    out: line[4].to_string(),
+                }),
+                "OR" => assignments.push_back(Assignment {
+                    op: Operation::Or,
+                    in1: line[0].to_string(),
+                    in2: Some(line[2].to_string()),
+                    out: line[4].to_string(),
+                }),
+                "LSHIFT" => assignments.push_back(Assignment {
+                    op: Operation::Lshift,
+                    in1: line[0].to_string(),
+                    in2: Some(line[2].to_string()),
+                    out: line[4].to_string(),
+                }),
+                "RSHIFT" => assignments.push_back(Assignment {
+                    op: Operation::Rshift,
+                    in1: line[0].to_string(),
+                    in2: Some(line[2].to_string()),
+                    out: line[4].to_string(),
+                }),
+                _ => panic!("Bad parse"),
+            }
+        }
     }
-    println!("{:#?}", wires);
-    println!("Wire a: {}", wire_get("a", &wires).unwrap());
+
+    // Seed round
+    let mut al = assignments.len();
+    println!("{al}");
+    for _ in 0..al {
+        let a = assignments.pop_front().unwrap();
+        if matches!(a.op, Operation::Direct) {
+            if let Ok(n) = a.in1.parse::<u16>() {
+                println!("{} -> {}", n, a.out);
+                wires.insert(a.out, n);
+                al -= 1;
+                continue;
+            }
+        }
+        assignments.push_back(a);
+    }
+
+    while !assignments.is_empty() {
+        let a = assignments.pop_front().unwrap();
+        let n1 = match wires.get(&a.in1) {
+            None => match a.in1.parse::<u16>() {
+                Ok(n) => n,
+                Err(_) => {
+                    assignments.push_back(a);
+                    continue;
+                }
+            },
+            Some(n) => *n,
+        };
+        if a.in2.is_none() {
+            match a.op {
+                Operation::Direct => {
+                    println!("{} -> {}", n1, a.out);
+                    wires.insert(a.out, n1);
+                    continue;
+                }
+                Operation::Not => {
+                    let new = !n1;
+                    println!("{new} -> {}", a.out);
+                    wires.insert(a.out, new);
+                    continue;
+                }
+                _ => panic!("One input given to operation that requires two inputs."),
+            }
+        }
+        let n2 = a.in2.as_ref().unwrap();
+        let n2 = match wires.get(n2) {
+            None => match n2.parse::<u16>() {
+                Ok(n) => n,
+                Err(_) => {
+                    assignments.push_back(a);
+                    continue;
+                }
+            },
+            Some(n) => *n,
+        };
+        match a.op {
+            Operation::And => {
+                let new = n1 & n2;
+                println!("{new} -> {}", a.out);
+                wires.insert(a.out, new);
+            }
+            Operation::Or => {
+                let new = n1 | n2;
+                println!("{new} -> {}", a.out);
+                wires.insert(a.out, new);
+            }
+            Operation::Lshift => {
+                let new = n1 << n2;
+                println!("{new} -> {}", a.out);
+                wires.insert(a.out, new);
+            }
+            Operation::Rshift => {
+                let new = n1 >> n2;
+                println!("{new} -> {}", a.out);
+                wires.insert(a.out, new);
+            }
+            _ => panic!("How did we get here?"),
+        };
+    }
+    println!("{}", wires.len());
+    println!("a: {}", wires.get("a").unwrap());
 }
