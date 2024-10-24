@@ -79,11 +79,16 @@ fn main() {
         }
     }
 
+    // Assign b to previous value of a
+    wires.insert("b".to_string(), 956);
     // Seed round
     let mut al = assignments.len();
     println!("{al}");
     for _ in 0..al {
         let a = assignments.pop_front().unwrap();
+        if a.out == "b" {
+            continue;
+        }
         if matches!(a.op, Operation::Direct) {
             if let Ok(n) = a.in1.parse::<u16>() {
                 println!("{} -> {}", n, a.out);
