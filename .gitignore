@@ -1,4 +1,6 @@
 */*/input.txt
+*/*/src/input.txt
+*/*/src/test.txt
 */*/a.out
-2015/7/src/input.txt
-2015/7/src/test.txt
+*/*/target/
+*/*/Cargo.lock
