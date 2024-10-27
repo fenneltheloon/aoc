@@ -9,27 +9,16 @@ fn main() {
         let mut line_i = line.chars();
         let mut c = line_i.next();
         while !matches!(c, None) {
-            if matches!(c, Some('\\')) {
-                let mut c = line_i.next().unwrap();
-                match c {
-                    '\\' => {}
-                    '"' => {}
-                    'x' => {
-                        for _ in 0..2 {
-                            c = line_i.next().unwrap();
-                            if !c.is_ascii_hexdigit() {
-                                panic!("Bad hexadecimal escape sequence.");
-                            }
-                        }
-                    }
-                    _ => panic!("Bad escape sequence"),
-                };
-            }
             sch += 1;
+            match c {
+                Some('\\') => sch += 1,
+                Some('"') => sch += 1,
+                _ => (),
+            }
             c = line_i.next();
         }
-        sch -= 2;
+        sch += 2;
     }
-    let dif = tch - sch;
-    println!("{tch} - {sch} = {dif}");
+    let dif = sch - tch;
+    println!("{sch} - {tch} = {dif}");
 }
