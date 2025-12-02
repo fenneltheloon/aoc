@@ -36,6 +36,31 @@ fn adjust(curr: P100, inc: &str) -> P100 {
         _ => panic!("Unexpected input: {inc}"),
     }
 }
+
+fn adjust2(mut curr: P100, inc: &str, mut zero_count: u32) -> (P100, u32) {
+    let (direction, amount) = inc.split_at(1);
+    let amount = amount.parse::<u32>().unwrap();
+    // Figure out how many times we pass zero
+    match direction {
+        "R" => {
+            zero_count += (curr.value as u32 + amount) / 100;
+            (curr + amount as i32, zero_count)
+        }
+        "L" => {
+            if curr.value == 0 {
+                curr.value = 100;
+            }
+            let delta = curr.value as i32 - amount as i32;
+            if delta <= 0 {
+                zero_count += 1;
+            }
+            zero_count += (delta / 100).abs() as u32;
+            (curr - amount as i32, zero_count)
+        }
+        _ => panic!("Unexpected input: {inc}"),
+    }
+}
+
 fn main() {
     let input = File::open("input.txt").unwrap();
     let input_lines = BufReader::new(input).lines();
@@ -43,11 +68,11 @@ fn main() {
     let mut current = P100 { value: 50 };
     for line in input_lines {
         let line = line.unwrap();
-        current = adjust(current, &line);
-        println!("{line}: {current:?}");
-        if current.value == 0 {
-            zero_count += 1;
-        }
+        (current, zero_count) = adjust2(current, &line, zero_count);
+        println!("{line}: {current:?}, {zero_count}");
+        // if current.value == 0 {
+        //     zero_count += 1;
+        // }
     }
     println!("Final password: {zero_count}");
 }
