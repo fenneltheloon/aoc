@@ -18,14 +18,17 @@ fn main() {
             Ok(n) => n,
             Err(e) => panic!("{e}: {split:?}")
         };
-        for num in left_bound..=right_bound {
+        'a: for num in left_bound..=right_bound {
             let num_array: Vec<char> = num.to_string().chars().collect();
-            if num_array.len() % 2 == 1 {
-                continue;
-            }
-            if num_array[..num_array.len() / 2] == num_array[num_array.len() / 2..] {
-                sum += num;
-                println!("Adding {num}");
+            let array_len = num_array.len();
+            for chunk_size in 1..=array_len / 2 {
+                let mut chunks = num_array.chunks(chunk_size);
+                let first = chunks.next().unwrap();
+                if chunks.all(|e| e == first) {
+                    sum += num;
+                    println!("Adding {num}, repeated section {first:?}");
+                    continue 'a;
+                }
             }
         }
     }
