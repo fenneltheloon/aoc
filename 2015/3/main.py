@@ -1,12 +1,12 @@
 def step(op, char, grid):
     match char:
-        case 'v':
+        case "v":
             op[1] -= 1
-        case '^':
+        case "^":
             op[1] += 1
-        case '>':
+        case ">":
             op[0] += 1
-        case '<':
+        case "<":
             op[0] -= 1
     if op not in grid:
         grid.append(op.copy())
