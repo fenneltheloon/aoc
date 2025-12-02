@@ -1,43 +1,41 @@
 use std::fs::File;
-use std::io::{BufReader, BufRead};
+use std::io::{BufRead, BufReader};
 use std::ops::{Add, Sub};
 
+#[derive(Debug)]
 struct P100 {
     value: u8,
 }
 
-impl Add<u32> for P100 {
+impl Add<i32> for P100 {
     type Output = P100;
 
-    fn add(self, rhs: u32) -> Self::Output {
+    fn add(self, rhs: i32) -> Self::Output {
         Self {
-            value: ((self.value as u32 + rhs) % 100) as u8,
+            value: (self.value as i32 + rhs).rem_euclid(100) as u8,
         }
     }
 }
 
-impl Sub<u32> for P100 {
+impl Sub<i32> for P100 {
     type Output = P100;
 
-    fn sub(self, rhs: u32) -> Self::Output {
+    fn sub(self, rhs: i32) -> Self::Output {
         Self {
-            value: ((self.value as u32 - rhs) % 100) as u8,
+            value: (self.value as i32 - rhs).rem_euclid(100) as u8,
         }
     }
 }
 
-impl P100 {
-    fn adjust(&mut self, inc: &str) {
-        let (direction, amount) = inc.split_at(1);
-        let amount = amount.parse::<u32>().unwrap();
-        *self = match direction {
-            "R" => self + amount,
-            "L" => self - amount,
-            _ => panic!("Unexpected input: {inc}"),
-        }
+fn adjust(curr: P100, inc: &str) -> P100 {
+    let (direction, amount) = inc.split_at(1);
+    let amount = amount.parse::<i32>().unwrap();
+    match direction {
+        "R" => curr + amount,
+        "L" => curr - amount,
+        _ => panic!("Unexpected input: {inc}"),
     }
 }
-
 fn main() {
     let input = File::open("input.txt").unwrap();
     let input_lines = BufReader::new(input).lines();
@@ -45,7 +43,8 @@ fn main() {
     let mut current = P100 { value: 50 };
     for line in input_lines {
         let line = line.unwrap();
-        current.adjust(&line);
+        current = adjust(current, &line);
+        println!("{line}: {current:?}");
         if current.value == 0 {
             zero_count += 1;
         }
