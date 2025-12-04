@@ -1,5 +1,7 @@
 use std::{
-    cmp::Ordering, fs::File, io::{BufRead, BufReader}
+    cmp::Ordering,
+    fs::File,
+    io::{BufRead, BufReader},
 };
 
 const JOLTAGE_PACK: usize = 12;
@@ -23,8 +25,8 @@ where
     for i in 0..JOLTAGE_PACK {
         let mut wtracker = tracker.clone();
         match picked_array.iter().rev().next() {
-            Some(n) => {wtracker = wtracker[n.0+1..].to_vec()},
-            None => {}, 
+            Some(n) => wtracker = wtracker[n.0 + 1..].to_vec(),
+            None => {}
         };
         wtracker.sort_by(|a, b| cmp(b, a));
         // println!("{wtracker:?}");
@@ -37,11 +39,14 @@ where
         let item = wtracker[0];
         picked_array.push(wtracker[0]);
         print!("{item:?}");
-    };
+    }
     println!();
     assert_eq!(picked_array.len(), JOLTAGE_PACK);
 
-    let cell = picked_array.iter().map(|e| e.1).fold(0u64, |acc, e| acc * 10 + e as u64);
+    let cell = picked_array
+        .iter()
+        .map(|e| e.1)
+        .fold(0u64, |acc, e| acc * 10 + e as u64);
 
     println!("Selecting {cell}");
     cell
