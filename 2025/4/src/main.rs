@@ -16,6 +16,9 @@ fn check_char(c: Option<&char>) -> u8 {
 fn single_row(buffer: &Vec<Vec<char>>) -> u32 {
     let mut sum = 0u32;
     for i in 0..buffer[1].len() {
+        if *buffer[1].get(i).unwrap() == '.' {
+            continue;
+        }
         let mut adjs = 0u8;
         if i > 0 {
             adjs += check_char(buffer[1].get(i - 1));
@@ -50,17 +53,23 @@ fn main() {
     let row_padding = vec!['.'; length];
     buffer.insert(0, row_padding);
     let mut answer = 0u32;
-    answer += single_row(&buffer);
+    let sr = single_row(&buffer);
+    println!("Row: {sr}");
+    answer += sr;
 
     for line in input_lines {
         buffer.remove(0);
         buffer.push(line.unwrap().chars().collect());
-        answer += single_row(&buffer);
+        let sr = single_row(&buffer);
+        println!("Row: {sr}");
+        answer += sr;
     }
 
     buffer.remove(0);
     buffer.push(vec!['.'; length]);
-    answer += single_row(&buffer);
+    let sr = single_row(&buffer);
+    println!("Row: {sr}");
+    answer += sr;
 
     println!("Result: {answer}");
 }
