@@ -16,15 +16,13 @@ fn test_insert<T: Ord>(a: &mut Vec<T>, low_bound: T, up_bound: T) {
         Err(n) => n,
     };
     a.drain(insert_position_low..insert_position_high);
-    if insert_position_low % 2 == 0 {
+    let is_new_low = insert_position_low % 2 == 0;
+    let is_new_high = insert_position_high % 2 == 0;
+    if is_new_low {
         a.insert(insert_position_low, low_bound);
-        if insert_position_high % 2 == 0 {
-            a.insert(insert_position_low + 1, up_bound);
-        }
-    } else {
-        if insert_position_high % 2 == 0 {
-            a.insert(insert_position_low, up_bound);
-        }
+    }
+    if is_new_high {
+        a.insert(insert_position_low + is_new_low as usize, up_bound);
     }
 }
 
