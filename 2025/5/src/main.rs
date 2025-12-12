@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::{
     fs::File,
     io::{BufRead, BufReader},
@@ -26,13 +27,6 @@ fn test_insert<T: Ord>(a: &mut Vec<T>, low_bound: T, up_bound: T) {
     }
 }
 
-fn is_in_range<T: Ord>(a: &Vec<T>, val: T) -> bool {
-    match a.binary_search(&val) {
-        Ok(_) => true,
-        Err(n) => n % 2 == 1,
-    }
-}
-
 fn main() {
     let input = File::open("input.txt").unwrap();
     let mut input_lines = BufReader::new(input).lines();
@@ -49,8 +43,10 @@ fn main() {
     assert!(test_area.is_sorted());
     println!("Range vector: {test_area:?}");
 
-    let answer = input_lines.fold(0u64, |acc, e| {
-        acc + is_in_range(&test_area, e.unwrap().parse::<u64>().unwrap()) as u64
-    });
+    let answer = test_area
+        .iter()
+        .tuples::<(_, _)>()
+        .fold(0u64, |acc, e| acc + e.1 - e.0 + 1);
+
     println!("Answer: {answer}");
 }
