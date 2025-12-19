@@ -56,20 +56,23 @@ fn main() {
         .collect::<Vec<_>>();
 
     dist_pair_list.sort_by(|e, f| e.2.partial_cmp(&f.2).unwrap());
+    dist_pair_list.reverse();
 
-    for (i, dist) in dist_pair_list.iter().take(1000).enumerate() {
-        print!("{dist:?}\t");
-        if i % 3 == 0 {
-            println!();
-        }
-    }
-
-    let dist_pair_list = dist_pair_list
+    let mut dist_pair_list = dist_pair_list
         .iter()
         .map(|e| (e.0, e.1))
         .collect::<Vec<_>>();
 
-    for pair in dist_pair_list.clone().iter().take(1000) {
+    let mut pair;
+    let mut i = 0;
+    loop {
+        pair = dist_pair_list.pop().unwrap();
+        i += 1;
+        print!("{pair:?}\t");
+        if i % 2 == 0 {
+            println!();
+            println!("{0}", graph.len())
+        }
         match graph.get_mut(&pair.0) {
             Some(l) => {
                 l.insert(pair.1);
@@ -86,53 +89,10 @@ fn main() {
                 graph.insert(pair.1, HashSet::from([pair.0]));
             }
         }
+        if graph.len() >= lines.len() {
+            break;
+        }
     }
 
-    // s is the working stack
-    let mut s: HashSet<Coord> = HashSet::new();
-    // Each entry in this will be a list corresponding to a network
-    let mut networks: Vec<HashSet<Coord>> = vec![HashSet::new()];
-    let mut networks_len = 1usize;
-
-    while !graph.is_empty() {
-        let curr = if s.is_empty() {
-            networks.push(HashSet::new());
-            networks_len += 1;
-            println!("Current graph len: {0}", graph.len());
-            *graph.keys().next().unwrap()
-        } else {
-            // println!("{s:?}");
-            let temp = *s.iter().next().unwrap();
-            s.remove(&temp);
-            temp
-        };
-
-        // println!("curr: {curr:?}");
-
-        let node = match graph.remove_entry(&curr) {
-            Some(n) => n,
-            None => continue,
-        };
-
-        // println!("node: {node:?}");
-
-        networks[networks_len - 1].insert(node.0);
-        s.extend(node.1.iter());
-    }
-
-    networks.sort_by_key(|e| e.len());
-
-    for network in networks.iter() {
-        println!("{network:?}");
-        println!("Size: {0}", network.len());
-    }
-
-    let answer = networks
-        .iter()
-        .rev()
-        .take(3)
-        .map(|e| e.len())
-        .fold(1usize, usize::strict_mul);
-
-    println!("Answer: {answer}");
+    println!("{0}: {1:?}", pair.0 .0 as u32 * pair.1 .0 as u32, pair);
 }
