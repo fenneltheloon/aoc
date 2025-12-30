@@ -2,7 +2,7 @@ use std::{
     cmp::{max, min},
     fmt::Display,
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, BufWriter, Write},
     path::Path,
     sync::{Arc, Mutex, RwLock},
     thread::{self, JoinHandle},
@@ -249,15 +249,16 @@ fn main() {
         }
 
         // Write to field file
-        // let field_file = File::create(field_file_path).unwrap();
-        // let mut ffw = BufWriter::new(field_file);
+        let field_file = File::create(field_file_path).unwrap();
+        let mut ffw = BufWriter::new(field_file);
 
-        // for row in field.iter() {
-        //     for item in row {
-        //         write!(ffw, "{}", item).unwrap();
-        //     }
-        //     writeln!(ffw).unwrap();
-        // }
+        for (i, row) in field.iter().enumerate() {
+            println!("Writing line {i}/{}", field.len());
+            for item in row {
+                write!(ffw, "{}", item).unwrap();
+            }
+            writeln!(ffw).unwrap();
+        }
     }
 
     let perm_list = permute_list(&lines);
@@ -268,7 +269,6 @@ fn main() {
         .collect::<Vec<_>>();
 
     area_list.sort_by_key(|e| e.2);
-    area_list.reverse();
     let lis_len = area_list.len();
     let task_list = Arc::new(Mutex::new(area_list));
     let field = Arc::new(field);
@@ -279,7 +279,7 @@ fn main() {
     let mut thread_pool: Vec<JoinHandle<_>> = Vec::with_capacity(num_cpus);
     let is_done = Arc::new(RwLock::new(false));
 
-    for i in 0..num_cpus {
+    for _ in 0..num_cpus {
         let fd = Arc::clone(&field);
         let ko = Arc::clone(&known_outsides);
         let tl = Arc::clone(&task_list);
@@ -296,9 +296,10 @@ fn main() {
                 break;
             }
             let rect = tl_lock.pop().unwrap();
+            let item_ind = lis_len - tl_lock.len();
             drop(tl_lock);
 
-            println!("{} / {lis_len}: {rect:?}", i + 1);
+            println!("{item_ind} / {lis_len}: {rect:?}");
             let minx = min(rect.0 .0, rect.1 .0);
             let miny = min(rect.0 .1, rect.1 .1);
             let maxx = max(rect.0 .0, rect.1 .0);
