@@ -43,8 +43,8 @@ fn line_to_presses(line: String) -> usize {
         if working.is_empty() {
             break;
         }
-        println!("Round {round}");
-        println!("Seen: {seen:?}");
+        // println!("Round {round}");
+        // println!("Seen: {seen:?}");
         let mut new_stack = vec![];
         for curr in working.iter() {
             seen.push(*curr);
