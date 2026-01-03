@@ -11,8 +11,8 @@ fn from_list(a: &[usize]) -> usize {
 }
 
 fn from_str(a: &str) -> usize {
-    let chars = a.trim_matches(BRACKETS).chars();
-    chars.fold(0usize, |acc, e| (acc << 1) + (e == '#') as usize)
+    let chars = a.trim_matches(BRACKETS).chars().rev();
+    chars.fold(0usize, |acc, e| (acc << 1) + ((e == '#') as usize))
 }
 
 fn line_to_presses(line: String) -> usize {
