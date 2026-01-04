@@ -11,20 +11,26 @@ fn gaussian_elim(a: &mut [Vec<f64>]) -> Vec<f64> {
     println!("{a:#?}");
     let col_size = a.len();
     let row_size = a[0].len();
-    let free_vars = vec![];
-    for pivot_index in 0..col_size {
-        let (index, _) = a.iter().enumerate().skip(pivot_index).fold(
-            (0usize, &vec![f64::MIN; row_size]),
-            |acc, e| {
-                if e.1[pivot_index] > acc.1[pivot_index] {
-                    e
-                } else {
-                    acc
-                }
-            },
-        );
-        a.swap(pivot_index, index);
-        if a[pivot_index][piv]
+    let mut free_vars = vec![];
+    let mut round = 0;
+    while round < col_size {
+        let pivot_index = round + free_vars.len();
+        let (index, _) =
+            a.iter()
+                .enumerate()
+                .skip(round)
+                .fold((0usize, &vec![f64::MIN; row_size]), |acc, e| {
+                    if e.1[pivot_index] > acc.1[pivot_index] {
+                        e
+                    } else {
+                        acc
+                    }
+                });
+        a.swap(round, index);
+        if a[round][pivot_index] == 0.0 {
+            free_vars.push(pivot_index);
+            continue;
+        }
         let bottom_factor = a[pivot_index][pivot_index];
         let ref_row = a[pivot_index].clone();
         // Clear out all rows beneath
@@ -35,9 +41,11 @@ fn gaussian_elim(a: &mut [Vec<f64>]) -> Vec<f64> {
             }
             assert_eq!(mod_row[pivot_index], 0.0);
         }
+        round += 1;
     }
     println!("{a:#?}");
     // Back substitute
+    // TODO: keep the matrix as it is now and just figure out the free variable bounds from here.
     let mut sol_vec: Vec<f64> = vec![];
     for row_index in (0..col_size).rev() {
         for i in (row_index + 1..col_size).rev() {
