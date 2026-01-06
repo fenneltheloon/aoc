@@ -1,6 +1,9 @@
+use itertools::Itertools;
 use std::{
+    collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
+    ops::Range,
 };
 
 const PARENS: [char; 2] = ['(', ')'];
@@ -11,6 +14,7 @@ fn gaussian_elim(a: &mut [Vec<f64>]) -> Vec<f64> {
     println!("{a:#?}");
     let col_size = a.len();
     let row_size = a[0].len();
+    // The indexes of the free variables, not their value
     let mut free_vars = vec![];
     let mut round = 0;
     while round < col_size {
@@ -45,17 +49,46 @@ fn gaussian_elim(a: &mut [Vec<f64>]) -> Vec<f64> {
     }
     println!("{a:#?}");
     // Back substitute
-    // TODO: keep the matrix as it is now and just figure out the free variable bounds from here.
-    let mut sol_vec: Vec<f64> = vec![];
-    for row_index in (0..col_size).rev() {
-        for i in (row_index + 1..col_size).rev() {
-            a[row_index][col_size] -= a[row_index][i] * sol_vec[col_size - (row_index + 1)];
+    // free_vars should be sorted smallest to largest index
+    // Strongly assert that all values in our matrix are integers after reduction
+    for row in a.iter() {
+        for item in row {
+            assert_eq!(item.fract(), 0.0);
         }
-        a[row_index][col_size] /= a[row_index][row_index];
-        sol_vec.push(a[row_index][col_size]);
     }
-    sol_vec.reverse();
-    sol_vec
+
+    let sol_vec = a.iter().map(|e| e[row_size - 1]).collect::<Vec<_>>();
+    let mut max_value_free_vars = vec![];
+    for var in free_vars.iter() {
+        // Get the var-th column
+        let button = a.iter().map(|e| e[*var]);
+        let max_value = sol_vec
+            .iter()
+            .zip(button)
+            .map(|e| if e.1 == 0.0 { f64::MAX } else { e.0 / e.1 })
+            .reduce(|acc, e| if acc <= e { acc } else { e })
+            .unwrap();
+        max_value_free_vars.push(max_value);
+    }
+    // Now we need to generate permutations for all free variables
+    // We have already asserted that all values in max_value_free_perms are integers, cast *should* be safe
+    let free_var_perms = max_value_free_vars
+        .iter()
+        .map(|e| 0..*e as usize)
+        .multi_cartesian_product();
+
+    for free_var_perm in free_var_perms {
+        // Solve entire matrix here, starting with bottom row
+        let mut var_value: HashMap<usize, usize> = HashMap::new();
+        for (index, value) in free_vars.iter().zip(free_var_perm.iter()) {
+            var_value.insert(*index, *value).unwrap();
+        }
+        for row in a.iter().rev() {
+            let pivot_index = row.iter().enumerate().find(|e| *e.1 == 0.0).unwrap().0;
+            // TODO: Move everything greater than pivot index to RHS (clone value), add solution to hashmap
+        }
+    }
+    todo!()
 }
 
 fn transpose<T: Copy + Default>(a: &[Vec<T>]) -> Vec<Vec<T>> {
